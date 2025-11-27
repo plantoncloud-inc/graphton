@@ -47,9 +47,6 @@ target-version = "py311"
 select = ["E", "F", "I", "D", "UP", "N", "ANN"]
 ignore = ["D401", "D417", "E501", "ANN101", "ANN102"]
 
-[tool.ruff.lint.pydantic-validation]
-enabled = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"

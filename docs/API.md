@@ -12,6 +12,8 @@ The main entry point for creating LangGraph Deep Agents with minimal boilerplate
 def create_deep_agent(
     model: str | BaseChatModel,
     system_prompt: str,
+    mcp_servers: dict[str, dict[str, Any]] | None = None,
+    mcp_tools: dict[str, list[str]] | None = None,
     tools: Sequence[BaseTool] | None = None,
     middleware: Sequence[Any] | None = None,
     context_schema: type[Any] | None = None,
@@ -34,15 +36,25 @@ def create_deep_agent(
 - Must be non-empty
 - This is the primary way to control agent behavior
 
+**`mcp_servers`** (dict[str, dict[str, Any]] | None, default: None)
+- Optional MCP server configurations
+- Format compatible with Cursor's mcp.json
+- See [MCP Integration](#mcp-integration) section for details
+
+**`mcp_tools`** (dict[str, list[str]] | None, default: None)
+- Optional MCP tools to load from configured servers
+- Must be provided if mcp_servers is specified
+- See [MCP Integration](#mcp-integration) section for details
+
 **`tools`** (Sequence[BaseTool] | None, default: None)
-- Optional list of tools the agent can use
+- Optional list of LangChain tools the agent can use
 - Defaults to empty list if not provided
-- In Phase 3, MCP tools will be automatically loaded
+- Can be combined with MCP tools
 
 **`middleware`** (Sequence[Any] | None, default: None)
 - Optional list of middleware to run before/after agent execution
 - Defaults to empty list if not provided
-- In Phase 3, MCP tool loading middleware will be auto-injected
+- MCP tool loading middleware is auto-injected when mcp_servers is specified
 
 **`context_schema`** (type[Any] | None, default: None)
 - Optional state schema for the agent
@@ -415,42 +427,208 @@ agent = create_deep_agent(
 
 ---
 
-## Coming in Phase 3
+## MCP Integration
 
-Phase 3 will add MCP (Model Context Protocol) integration:
+Graphton provides first-class support for MCP (Model Context Protocol) tools with zero boilerplate.
+
+### MCP Parameters
+
+#### mcp_servers: dict[str, dict[str, Any]] | None = None
+
+Configuration for MCP servers.
+
+**Format** (compatible with Cursor's mcp.json):
 
 ```python
-# Future API (Phase 3)
+mcp_servers={
+    "server-name": {
+        "transport": "streamable_http",  # Only streamable_http supported currently
+        "url": "https://mcp.example.com/",  # MCP server URL
+        "auth_from_context": True,  # Extract token from runtime (default)
+        "headers": {  # Optional additional headers
+            "Custom-Header": "value"
+        }
+    }
+}
+```
+
+**Multiple Servers**:
+
+```python
+mcp_servers={
+    "planton-cloud": {
+        "transport": "streamable_http",
+        "url": "https://mcp.planton.ai/",
+    },
+    "github": {
+        "transport": "streamable_http",
+        "url": "https://mcp.github.com/",
+    }
+}
+```
+
+#### mcp_tools: dict[str, list[str]] | None = None
+
+Specify which tools to load from each MCP server.
+
+**Format**:
+
+```python
+mcp_tools={
+    "server-name": [
+        "tool1",
+        "tool2",
+        "tool3",
+    ]
+}
+```
+
+**Example**:
+
+```python
+mcp_tools={
+    "planton-cloud": [
+        "list_organizations",
+        "create_cloud_resource",
+        "get_cloud_resource_schema",
+    ],
+    "github": [
+        "list_repos",
+        "create_issue",
+    ]
+}
+```
+
+**Tool Name Requirements**:
+
+- Must be exact tool names from MCP server
+- Use lowercase with underscores (snake_case)
+- No duplicates within a server
+
+### Complete MCP Example
+
+```python
+from graphton import create_deep_agent
+import os
+
 agent = create_deep_agent(
     model="claude-sonnet-4.5",
-    system_prompt=SYSTEM_PROMPT,
+    system_prompt="You are a Planton Cloud assistant.",
     
     # MCP server configuration
     mcp_servers={
         "planton-cloud": {
             "transport": "streamable_http",
             "url": "https://mcp.planton.ai/",
-            "auth_from_context": True,
         }
     },
     
     # Tool selection
     mcp_tools={
         "planton-cloud": [
-            "get_cloud_resource_schema",
+            "list_organizations",
             "create_cloud_resource",
         ]
     }
 )
 
-# Invoke with user authentication
+# Invoke with per-user authentication
 result = agent.invoke(
-    {"messages": [...]},
-    config={"configurable": {"_user_token": user_token}}
+    {"messages": [{"role": "user", "content": "List my organizations"}]},
+    config={
+        "configurable": {
+            "_user_token": os.getenv("PLANTON_API_KEY")
+        }
+    }
 )
 ```
 
-Stay tuned!
+### Per-User Authentication
+
+MCP tools support per-user authentication via config:
+
+```python
+result = agent.invoke(
+    {"messages": [...]},
+    config={
+        "configurable": {
+            "_user_token": user_token  # User's API token
+        }
+    }
+)
+```
+
+**How it works**:
+
+1. Token passed via config (not environment)
+2. Graphton extracts token at runtime
+3. Token added to MCP client Authorization header
+4. Each invocation can use different user's token
+
+**Benefits**:
+
+- ✅ Multi-tenant support
+- ✅ Works in LangGraph Cloud
+- ✅ Secure (no tokens in code)
+- ✅ Per-request authentication
+
+### Tool Wrapper Auto-Generation
+
+Graphton automatically generates tool wrappers for MCP tools. No manual `@tool` decorators needed.
+
+**Without Graphton** (~20 lines per tool):
+
+```python
+from langchain.tools import tool
+
+@tool
+async def list_organizations() -> str:
+    """List all organizations."""
+    client = get_mcp_client()
+    result = await client.call_tool("list_organizations", {})
+    return result
+
+# Repeat for every tool...
+```
+
+**With Graphton** (0 lines):
+
+```python
+# Just list the tools you want
+mcp_tools = {
+    "planton-cloud": [
+        "list_organizations",
+        "create_cloud_resource",
+        # ... add more tools
+    ]
+}
+```
+
+### Validation
+
+MCP configuration is validated at agent creation time:
+
+```python
+# ❌ Error: MCP servers without tools
+agent = create_deep_agent(
+    model="claude-sonnet-4.5",
+    system_prompt="...",
+    mcp_servers={"server": {...}},
+    mcp_tools=None,  # Missing
+)
+# ValidationError: mcp_servers provided but mcp_tools is missing
+
+# ❌ Error: Server name mismatch
+agent = create_deep_agent(
+    model="claude-sonnet-4.5",
+    system_prompt="...",
+    mcp_servers={"server-a": {...}},
+    mcp_tools={"server-b": [...]},  # Names don't match
+)
+# ValidationError: Server names don't match
+```
+
+For complete MCP documentation, see [examples/mcp_agent.py](../examples/mcp_agent.py) and [Configuration Guide](CONFIGURATION.md).
 
 ---
 

@@ -75,9 +75,39 @@ result = graph.invoke(
 
 ## Installation
 
-**Coming Soon**: Graphton will be published to PyPI after Phase 5.
+Install Graphton directly from GitHub:
 
-For now, you can install from source:
+### Using pip
+
+```bash
+# Latest from main branch
+pip install git+https://github.com/plantoncloud-inc/graphton.git
+
+# Specific version (recommended for production)
+pip install git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+
+# Specific commit (for testing)
+pip install git+https://github.com/plantoncloud-inc/graphton.git@abc1234
+```
+
+### Using Poetry
+
+```bash
+# Latest from main
+poetry add git+https://github.com/plantoncloud-inc/graphton.git
+
+# Specific version (recommended)
+poetry add git+https://github.com/plantoncloud-inc/graphton.git#v0.1.0
+```
+
+### In requirements.txt
+
+```
+# Pin to specific version
+graphton @ git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+```
+
+### Development Installation
 
 ```bash
 # Clone the repository
@@ -90,6 +120,8 @@ poetry install
 # Or install in development mode with pip
 pip install -e .
 ```
+
+For detailed installation options, troubleshooting, and upgrade instructions, see [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ## Quick Start
 
@@ -416,12 +448,16 @@ Graphton abstracts these patterns into a declarative framework, making agent cre
 - [x] Comprehensive test suite (37 tests)
 - [x] Configuration documentation
 
-### Phase 5: Documentation & Release
-- [ ] Comprehensive README
-- [ ] API documentation
-- [ ] Example agents
-- [ ] Migration guide from raw LangGraph
-- [ ] PyPI publication (v0.1.0)
+### Phase 5: Documentation & Release ✅ (Complete)
+- [x] Comprehensive README with examples
+- [x] Complete API documentation with MCP integration
+- [x] Working example agents (simple and MCP)
+- [x] Migration guide from raw LangGraph
+- [x] Installation guide (GitHub-based distribution)
+- [x] Troubleshooting guide
+- [x] Enhanced CONTRIBUTING guide
+- [x] Examples README with use cases
+- [x] GitHub repository prepared for open source
 
 ### Phase 6: Production Validation
 - [ ] Migrate graph-fleet agents to Graphton

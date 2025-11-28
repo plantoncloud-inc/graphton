@@ -134,7 +134,7 @@ class TestMiddlewareInitialization:
 class TestDynamicConfigValidation:
     """Tests for validation of dynamic configuration values."""
     
-    def test_missing_template_value_error(self) -> None:
+    async def test_missing_template_value_error(self) -> None:
         """Test error when template value not provided in config."""
         servers = {
             "dynamic-server": {
@@ -146,13 +146,13 @@ class TestDynamicConfigValidation:
         
         middleware = McpToolsLoader(servers, tool_filter)
         
-        # Try to run before_agent without providing TOKEN
+        # Try to run abefore_agent without providing TOKEN
         config = {"configurable": {}}  # TOKEN missing
         
         with pytest.raises(ValueError, match="Missing required template variables"):
-            middleware.before_agent({}, config)  # type: ignore[arg-type]
+            await middleware.abefore_agent({}, config)  # type: ignore[arg-type]
     
-    def test_missing_multiple_template_values(self) -> None:
+    async def test_missing_multiple_template_values(self) -> None:
         """Test error message for multiple missing template values."""
         servers = {
             "server": {
@@ -171,13 +171,13 @@ class TestDynamicConfigValidation:
         config = {"configurable": {"TOKEN": "value1"}}
         
         with pytest.raises(ValueError) as exc_info:
-            middleware.before_agent({}, config)  # type: ignore[arg-type]
+            await middleware.abefore_agent({}, config)  # type: ignore[arg-type]
         
         error_msg = str(exc_info.value)
         assert "BASE_URL" in error_msg
         assert "API_KEY" in error_msg
     
-    def test_missing_configurable_dict(self) -> None:
+    async def test_missing_configurable_dict(self) -> None:
         """Test error when config['configurable'] is missing."""
         servers = {
             "server": {
@@ -192,7 +192,7 @@ class TestDynamicConfigValidation:
         config = {}
         
         with pytest.raises(ValueError, match="requires template variables"):
-            middleware.before_agent({}, config)  # type: ignore[arg-type]
+            await middleware.abefore_agent({}, config)  # type: ignore[arg-type]
 
 
 class TestTemplateSubstitutionInMiddleware:

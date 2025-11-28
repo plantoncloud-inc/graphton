@@ -1,97 +1,91 @@
-"""MCP client manager for loading tools with authentication.
+"""MCP client manager for loading tools from configured servers.
 
 This module handles MCP client initialization, tool loading, and filtering.
-It creates MCP clients with dynamic Authorization headers containing user tokens.
+It accepts pre-configured server configurations (with auth already injected)
+and creates MCP clients accordingly.
 """
 
 import logging
 from collections.abc import Sequence
+from typing import Any
 
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient  # type: ignore[import-untyped]
-
-from graphton.core.config import McpServerConfig
 
 logger = logging.getLogger(__name__)
 
 
 async def load_mcp_tools(
-    servers: dict[str, McpServerConfig],
+    servers: dict[str, dict[str, Any]],
     tool_filter: dict[str, list[str]],
-    user_token: str,
 ) -> Sequence[BaseTool]:
-    """Load MCP tools from configured servers with user authentication.
+    """Load MCP tools from configured servers.
     
     This function:
-    1. Builds MCP client configuration with Authorization headers
-    2. Initializes MultiServerMCPClient for all configured servers
+    1. Accepts pre-configured server dictionaries (with auth already injected)
+    2. Initializes MultiServerMCPClient with the provided configurations
     3. Loads all available tools from the servers
     4. Filters tools based on the provided tool_filter
     5. Returns the filtered list of LangChain-compatible tools
     
     Args:
-        servers: Dictionary mapping server names to McpServerConfig instances
-        tool_filter: Dictionary mapping server names to lists of tool names to load
-        user_token: User's JWT token or API key for authentication
+        servers: Dictionary mapping server names to raw MCP server configs.
+            These configs should be complete and ready to pass to the MCP client,
+            including any authentication headers or other required fields.
+            Example: {
+                "planton-cloud": {
+                    "transport": "streamable_http",
+                    "url": "https://mcp.planton.ai/",
+                    "headers": {
+                        "Authorization": "Bearer token123"
+                    }
+                }
+            }
+        tool_filter: Dictionary mapping server names to lists of tool names to load.
+            Only tools whose names appear in this filter will be returned.
+            Example: {
+                "planton-cloud": ["list_organizations", "create_cloud_resource"]
+            }
         
     Returns:
         Sequence of LangChain BaseTool instances ready for use
         
     Raises:
-        ValueError: If user_token is empty or no tools match the filter
+        ValueError: If no tools match the filter
         RuntimeError: If MCP client fails to connect or load tools
         
     Example:
         >>> servers = {
-        ...     "planton-cloud": McpServerConfig(
-        ...         transport="streamable_http",
-        ...         url="https://mcp.planton.ai/"
-        ...     )
+        ...     "planton-cloud": {
+        ...         "transport": "streamable_http",
+        ...         "url": "https://mcp.planton.ai/",
+        ...         "headers": {
+        ...             "Authorization": "Bearer token123"
+        ...         }
+        ...     }
         ... }
         >>> tool_filter = {
         ...     "planton-cloud": ["list_organizations", "create_cloud_resource"]
         ... }
-        >>> tools = await load_mcp_tools(servers, tool_filter, "token123")
+        >>> tools = await load_mcp_tools(servers, tool_filter)
         >>> len(tools)
         2
-
     """
-    # Validate token
-    if not user_token or not user_token.strip():
-        raise ValueError(
-            "user_token is required for MCP authentication. "
-            "Token cannot be None or empty."
-        )
+    # Validate inputs
+    if not servers:
+        raise ValueError("servers cannot be empty. Provide at least one MCP server configuration.")
     
-    # Build client config with dynamic Authorization headers
-    client_config: dict[str, dict[str, str | dict[str, str]]] = {}
-    
-    for server_name, server_cfg in servers.items():
-        # Start with base configuration
-        config: dict[str, str | dict[str, str]] = {
-            "transport": server_cfg.transport,
-            "url": str(server_cfg.url),
-        }
-        
-        # Add Authorization header with user token
-        headers: dict[str, str] = {
-            "Authorization": f"Bearer {user_token}",
-        }
-        
-        # Merge with any static headers from config
-        if server_cfg.headers:
-            headers.update(server_cfg.headers)
-        
-        config["headers"] = headers
-        client_config[server_name] = config
+    if not tool_filter:
+        raise ValueError("tool_filter cannot be empty. Specify which tools to load.")
     
     logger.info(
         f"Connecting to {len(servers)} MCP server(s): {list(servers.keys())}"
     )
     
     try:
-        # Initialize MCP client with dynamic configuration
-        mcp_client = MultiServerMCPClient(client_config)
+        # Initialize MCP client with the provided server configurations
+        # No modification needed - configs are already complete with auth
+        mcp_client = MultiServerMCPClient(servers)
         
         # Get all tools from all servers
         all_tools = await mcp_client.get_tools()
@@ -145,6 +139,5 @@ async def load_mcp_tools(
         logger.error(f"Failed to load MCP tools: {e}", exc_info=True)
         raise RuntimeError(
             f"MCP tool loading failed: {e}. "
-            "Check MCP server connectivity and authentication."
+            "Check MCP server connectivity and configuration."
         ) from e
-

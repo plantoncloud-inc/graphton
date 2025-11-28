@@ -21,7 +21,7 @@ class TestMcpIntegrationLocal:
     """Test MCP integration with local agent invocation."""
     
     def test_create_agent_with_mcp_tools(self) -> None:
-        """Test creating an agent with MCP tool configuration."""
+        """Test creating an agent with MCP tool configuration (template syntax)."""
         agent = create_deep_agent(
             model="claude-sonnet-4.5",
             system_prompt="You are a helpful assistant.",
@@ -29,6 +29,9 @@ class TestMcpIntegrationLocal:
                 "planton-cloud": {
                     "transport": "streamable_http",
                     "url": "https://mcp.planton.ai/",
+                    "headers": {
+                        "Authorization": "Bearer {{USER_TOKEN}}"
+                    }
                 }
             },
             mcp_tools={
@@ -41,7 +44,7 @@ class TestMcpIntegrationLocal:
         assert hasattr(agent, "invoke")
     
     def test_invoke_agent_with_mcp_tools(self) -> None:
-        """Test invoking an agent with MCP tools locally."""
+        """Test invoking an agent with MCP tools locally (template syntax)."""
         agent = create_deep_agent(
             model="claude-sonnet-4.5",
             system_prompt="You are a Planton Cloud assistant. List the organizations.",
@@ -49,6 +52,9 @@ class TestMcpIntegrationLocal:
                 "planton-cloud": {
                     "transport": "streamable_http",
                     "url": "https://mcp.planton.ai/",
+                    "headers": {
+                        "Authorization": "Bearer {{USER_TOKEN}}"
+                    }
                 }
             },
             mcp_tools={
@@ -60,12 +66,12 @@ class TestMcpIntegrationLocal:
         user_token = os.getenv("PLANTON_API_KEY")
         assert user_token, "PLANTON_API_KEY must be set"
         
-        # Invoke with token in config
+        # Invoke with token in config - will be substituted into {{USER_TOKEN}}
         result = agent.invoke(
             {"messages": [{"role": "user", "content": "List my organizations"}]},
             config={
                 "configurable": {
-                    "_user_token": user_token
+                    "USER_TOKEN": user_token
                 }
             }
         )
@@ -89,6 +95,9 @@ class TestMcpIntegrationLocal:
                 "planton-cloud": {
                     "transport": "streamable_http",
                     "url": "https://mcp.planton.ai/",
+                    "headers": {
+                        "Authorization": "Bearer {{USER_TOKEN}}"
+                    }
                 }
             },
             mcp_tools={
@@ -96,15 +105,15 @@ class TestMcpIntegrationLocal:
             }
         )
         
-        # Invoke without token - should fail
-        with pytest.raises(ValueError, match="User token not found"):
+        # Invoke without token - should fail with missing template variable error
+        with pytest.raises(ValueError, match="Missing required template variables"):
             agent.invoke(
                 {"messages": [{"role": "user", "content": "List organizations"}]},
                 config={"configurable": {}}  # No token
             )
     
     def test_multiple_mcp_tools(self) -> None:
-        """Test agent with multiple MCP tools from one server."""
+        """Test agent with multiple MCP tools from one server (template syntax)."""
         agent = create_deep_agent(
             model="claude-sonnet-4.5",
             system_prompt="You are a Planton Cloud assistant.",
@@ -112,6 +121,9 @@ class TestMcpIntegrationLocal:
                 "planton-cloud": {
                     "transport": "streamable_http",
                     "url": "https://mcp.planton.ai/",
+                    "headers": {
+                        "Authorization": "Bearer {{USER_TOKEN}}"
+                    }
                 }
             },
             mcp_tools={
@@ -132,7 +144,7 @@ class TestMcpIntegrationLocal:
                     {"role": "user", "content": "List organizations and cloud resource kinds"}
                 ]
             },
-            config={"configurable": {"_user_token": user_token}}
+            config={"configurable": {"USER_TOKEN": user_token}}
         )
         
         assert result is not None
@@ -169,37 +181,21 @@ class TestMcpConfigurationValidation:
                 }
             )
     
-    def test_invalid_transport_fails(self) -> None:
-        """Test that invalid transport type is rejected."""
-        with pytest.raises(ValueError, match="Unsupported transport"):
+    def test_server_tools_mismatch_fails(self) -> None:
+        """Test that mismatched server names between mcp_servers and mcp_tools fails."""
+        # This will fail because server-a has no tools and server-b doesn't exist
+        with pytest.raises(ValueError, match="Server\\(s\\) configured but no tools specified"):
             create_deep_agent(
                 model="claude-sonnet-4.5",
                 system_prompt="You are a test assistant.",
                 mcp_servers={
-                    "test": {
-                        "transport": "stdio",  # Not supported yet
-                        "url": "https://test.example.com/",
-                    }
-                },
-                mcp_tools={
-                    "test": ["test_tool"]
-                }
-            )
-    
-    def test_invalid_url_fails(self) -> None:
-        """Test that invalid URL is rejected."""
-        with pytest.raises(ValueError):
-            create_deep_agent(
-                model="claude-sonnet-4.5",
-                system_prompt="You are a test assistant.",
-                mcp_servers={
-                    "test": {
+                    "server-a": {
                         "transport": "streamable_http",
-                        "url": "not-a-valid-url",  # Invalid
+                        "url": "https://a.example.com/",
                     }
                 },
                 mcp_tools={
-                    "test": ["test_tool"]
+                    "server-b": ["test_tool"]  # Mismatch!
                 }
             )
 

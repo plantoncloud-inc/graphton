@@ -1,7 +1,8 @@
-"""Example: Deep Agent with MCP tools from Planton Cloud.
+"""Example: Deep Agent with MCP tools from Planton Cloud (Dynamic Auth).
 
-This example demonstrates how to create an agent that uses MCP tools
-from the Planton Cloud MCP server with per-user authentication.
+This example demonstrates the universal MCP authentication framework with
+dynamic token injection using template variables. The MCP server configuration
+contains {{USER_TOKEN}} which is substituted at runtime from config['configurable'].
 
 Prerequisites:
 - Set PLANTON_API_KEY environment variable with your token
@@ -45,16 +46,20 @@ def main() -> None:
     
     print("Creating agent with MCP tools from Planton Cloud...")
     
-    # Create agent with MCP tools
+    # Create agent with MCP tools (dynamic authentication)
     agent = create_deep_agent(
         model="claude-sonnet-4.5",
         system_prompt=SYSTEM_PROMPT,
         
-        # MCP server configuration (Cursor-compatible format)
+        # MCP server configuration with template variable
+        # {{USER_TOKEN}} will be substituted at runtime
         mcp_servers={
             "planton-cloud": {
                 "transport": "streamable_http",
                 "url": "https://mcp.planton.ai/",
+                "headers": {
+                    "Authorization": "Bearer {{USER_TOKEN}}"
+                }
             }
         },
         
@@ -73,6 +78,7 @@ def main() -> None:
     print("-" * 60)
     
     # Invoke agent with user token
+    # The token will be substituted into {{USER_TOKEN}} in the MCP config
     result = agent.invoke(
         {
             "messages": [
@@ -84,7 +90,7 @@ def main() -> None:
         },
         config={
             "configurable": {
-                "_user_token": user_token
+                "USER_TOKEN": user_token  # Substituted into {{USER_TOKEN}}
             }
         }
     )
@@ -112,7 +118,7 @@ def main() -> None:
         },
         config={
             "configurable": {
-                "_user_token": user_token
+                "USER_TOKEN": user_token  # Substituted into {{USER_TOKEN}}
             }
         }
     )
@@ -124,12 +130,14 @@ def main() -> None:
     
     print("\n✅ Example completed successfully!")
     print("\nKey features demonstrated:")
-    print("  - MCP server configuration")
-    print("  - Per-user authentication via config")
+    print("  - Dynamic MCP configuration with template variables")
+    print("  - Per-user authentication via config['configurable']")
+    print("  - Template substitution ({{USER_TOKEN}}) at runtime")
     print("  - Multiple MCP tools from one server")
     print("  - Conversational agent with tool use")
 
 
 if __name__ == "__main__":
     main()
+
 

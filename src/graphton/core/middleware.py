@@ -1,14 +1,19 @@
-"""Middleware for loading MCP tools with per-user authentication.
+"""Middleware for loading MCP tools with universal authentication support.
 
-This middleware runs before agent execution to:
-1. Extract user token from config['configurable']['_user_token']
-2. Set token in contextvars for tool wrapper access
-3. Load MCP tools asynchronously with user authentication
-4. Cache tools for tool wrapper access
+This middleware supports both static and dynamic MCP server configurations:
 
-Unlike graph-fleet's approach which relies on runtime.context (unavailable in
-LangGraph Cloud remote deployments), this uses the config parameter which is
-reliably available in both local and remote environments.
+**Static configs** (no template variables):
+- Tools are loaded once at agent creation time
+- No runtime overhead
+- Ideal for servers with hardcoded credentials or no authentication
+
+**Dynamic configs** (with {{VAR_NAME}} templates):
+- Templates are substituted at invocation time using config['configurable']
+- Tools are loaded per-request with user-specific credentials
+- Ideal for multi-tenant systems or user-specific authentication
+
+The middleware automatically detects which mode to use based on the presence
+of template variables in the server configurations.
 """
 
 import asyncio
@@ -17,56 +22,141 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
-from graphton.core.config import McpServerConfig
-from graphton.core.context import clear_user_token, set_user_token
 from graphton.core.mcp_manager import load_mcp_tools
+from graphton.core.template import extract_template_vars, substitute_templates
 
 logger = logging.getLogger(__name__)
 
 
 class McpToolsLoader:
-    """Middleware to load MCP tools with per-user authentication.
+    """Middleware to load MCP tools with universal authentication support.
     
-    This middleware:
-    1. Extracts user token from config['configurable']['_user_token']
-    2. Sets token in contextvars for tool wrapper access
-    3. Loads MCP tools asynchronously with the user's token
-    4. Caches tools for access by wrapper functions
+    This middleware automatically detects static vs dynamic configurations:
     
-    Works in both local and remote LangGraph deployments by using the config
-    parameter instead of runtime.context.
+    - **Static mode**: No template variables ({{VAR}}) found in configs
+      - Tools loaded once at initialization
+      - Zero runtime overhead
+      - Use for hardcoded credentials or public servers
     
-    Example:
-        >>> from graphton.core.middleware import McpToolsLoader
-        >>> from graphton.core.config import McpServerConfig
-        >>> 
+    - **Dynamic mode**: Template variables found in configs
+      - Templates substituted from config['configurable'] at invocation
+      - Tools loaded per-request with user-specific auth
+      - Use for multi-tenant or user-specific authentication
+    
+    Example (Dynamic - Planton Cloud):
         >>> servers = {
-        ...     "planton-cloud": McpServerConfig(
-        ...         transport="streamable_http",
-        ...         url="https://mcp.planton.ai/"
-        ...     )
+        ...     "planton-cloud": {
+        ...         "transport": "streamable_http",
+        ...         "url": "https://mcp.planton.ai/",
+        ...         "headers": {
+        ...             "Authorization": "Bearer {{USER_TOKEN}}"
+        ...         }
+        ...     }
         ... }
         >>> tool_filter = {"planton-cloud": ["list_organizations"]}
         >>> middleware = McpToolsLoader(servers, tool_filter)
-
+        >>> middleware.is_dynamic
+        True
+        >>> # Later, at invocation:
+        >>> # agent.invoke(input, config={'configurable': {'USER_TOKEN': 'token123'}})
+    
+    Example (Static - Public server):
+        >>> servers = {
+        ...     "public-api": {
+        ...         "transport": "http",
+        ...         "url": "https://api.example.com/mcp",
+        ...         "headers": {
+        ...             "X-API-Key": "hardcoded-key-123"
+        ...         }
+        ...     }
+        ... }
+        >>> tool_filter = {"public-api": ["search", "fetch"]}
+        >>> middleware = McpToolsLoader(servers, tool_filter)
+        >>> middleware.is_dynamic
+        False
+        >>> # Tools already loaded - no runtime overhead
     """
     
     def __init__(
         self,
-        servers: dict[str, McpServerConfig],
+        servers: dict[str, dict[str, Any]],
         tool_filter: dict[str, list[str]],
     ) -> None:
         """Initialize MCP tools loader middleware.
         
         Args:
-            servers: Dictionary of server_name -> McpServerConfig
-            tool_filter: Dictionary of server_name -> list of tool names
-
+            servers: Dictionary of server_name -> raw MCP server config.
+                Configs can contain template variables like {{VAR_NAME}}.
+            tool_filter: Dictionary of server_name -> list of tool names to load.
         """
         self.servers = servers
         self.tool_filter = tool_filter
+        
+        # Auto-detect static vs dynamic based on template variables
+        self.template_vars = extract_template_vars(servers)
+        self.is_dynamic = bool(self.template_vars)
+        
+        # Track whether tools have been loaded
         self._tools_loaded = False
         self._tools_cache: dict[str, Any] = {}
+        
+        # If static config (no templates), load tools immediately
+        if not self.is_dynamic:
+            logger.info(
+                "Static MCP configuration detected (no template variables). "
+                "Loading tools at agent creation time..."
+            )
+            self._load_static_tools()
+        else:
+            logger.info(
+                f"Dynamic MCP configuration detected (template variables: {sorted(self.template_vars)}). "
+                "Tools will be loaded at invocation time with user-provided values."
+            )
+    
+    def _load_static_tools(self) -> None:
+        """Load tools for static configurations (synchronous wrapper).
+        
+        Called at initialization for static configs (no template variables).
+        """
+        try:
+            # Get or create event loop for async tool loading
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # If loop is already running, we can't use run_until_complete
+                    # This shouldn't happen at initialization, but handle gracefully
+                    raise RuntimeError("Event loop already running during static tool loading")
+            except RuntimeError:
+                # No event loop in current thread, create one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Load tools synchronously
+            tools = loop.run_until_complete(
+                load_mcp_tools(self.servers, self.tool_filter)
+            )
+            
+            if not tools:
+                raise RuntimeError(
+                    "No MCP tools were loaded from static configuration. "
+                    "Check server accessibility and tool filter."
+                )
+            
+            # Cache tools by name
+            self._tools_cache = {tool.name: tool for tool in tools}
+            self._tools_loaded = True
+            
+            logger.info(
+                f"Successfully loaded {len(tools)} static MCP tool(s) at creation time: "
+                f"{list(self._tools_cache.keys())}"
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to load static MCP tools: {e}", exc_info=True)
+            raise RuntimeError(
+                f"Static MCP tool loading failed during initialization: {e}. "
+                "Check MCP server connectivity and configuration."
+            ) from e
     
     def before_agent(
         self,
@@ -75,59 +165,75 @@ class McpToolsLoader:
     ) -> dict[str, Any] | None:
         """Load MCP tools before agent execution.
         
-        This method is called by LangGraph before the agent processes a request.
-        It extracts the user token from the config parameter (not runtime.context),
-        sets it in contextvars, and loads MCP tools asynchronously.
+        Behavior depends on configuration mode:
+        
+        - **Static mode**: Tools already loaded at initialization, returns immediately
+        - **Dynamic mode**: Substitutes templates from config['configurable'] and loads tools
         
         Args:
             state: Current agent state (unused but required by middleware protocol)
-            config: Runnable config containing user token in configurable dict
+            config: Runnable config containing template values in configurable dict
             
         Returns:
-            None (tools are cached in instance and token is in contextvars)
+            None (tools are cached in instance for wrapper access)
             
         Raises:
-            ValueError: If config is missing or token not found
+            ValueError: If config is missing or required template variables not provided
             RuntimeError: If MCP tools fail to load
-
         """
-        # Check if already loaded for this instance (idempotency)
-        if self._tools_loaded:
-            logger.info("MCP tools already loaded for this instance, skipping")
+        # Static mode: tools already loaded at initialization
+        if not self.is_dynamic:
+            logger.debug("Static MCP mode: tools already loaded, skipping")
             return None
         
-        logger.info("Loading MCP tools with per-user authentication...")
+        # Dynamic mode: substitute templates and load tools
+        
+        # Check if already loaded for this instance (idempotency)
+        if self._tools_loaded:
+            logger.info("MCP tools already loaded for this execution, skipping")
+            return None
+        
+        logger.info("Loading MCP tools with dynamic authentication...")
         
         try:
-            # Extract token from config parameter (works in both local and remote)
-            # This is different from graph-fleet which tried to use runtime.context
+            # Extract template values from config parameter
             if not config or "configurable" not in config:
                 raise ValueError(
-                    "Config is missing 'configurable' dictionary. "
-                    "Pass config={'configurable': {'_user_token': '...'}} when invoking agent."
+                    f"Dynamic MCP configuration requires template variables: {sorted(self.template_vars)}. "
+                    f"Pass config={{'configurable': {{{', '.join(f'{v!r}: value' for v in sorted(self.template_vars))}}}}} "
+                    "when invoking agent."
                 )
             
             configurable = config["configurable"]
-            user_token = configurable.get("_user_token")
             
-            if not user_token:
+            # Validate all required template variables are provided
+            provided_vars = set(configurable.keys())
+            missing_vars = self.template_vars - provided_vars
+            
+            if missing_vars:
                 raise ValueError(
-                    "User token not found in config['configurable']['_user_token']. "
-                    "Pass token when invoking: "
-                    "agent.invoke(input, config={'configurable': {'_user_token': token}})"
+                    f"Missing required template variables: {sorted(missing_vars)}. "
+                    f"Provide these in config['configurable']: "
+                    f"{', '.join(sorted(missing_vars))}"
                 )
             
-            logger.info("Successfully extracted user token from config")
+            logger.info(
+                f"Successfully extracted template values for: {sorted(self.template_vars)}"
+            )
             
-            # Set token in context for tool wrappers to access
-            set_user_token(user_token)
+            # Substitute template variables with actual values
+            substituted_servers = substitute_templates(
+                self.servers,
+                configurable
+            )
             
-            # Load MCP tools asynchronously
+            logger.debug(f"Template substitution complete for {len(substituted_servers)} server(s)")
+            
+            # Load MCP tools asynchronously with substituted config
             # We're in a sync middleware context but need async tool loading
-            # Use asyncio.run_coroutine_threadsafe to bridge sync/async
             loop = asyncio.get_event_loop()
             future = asyncio.run_coroutine_threadsafe(
-                load_mcp_tools(self.servers, self.tool_filter, user_token),
+                load_mcp_tools(substituted_servers, self.tool_filter),
                 loop
             )
             
@@ -145,7 +251,7 @@ class McpToolsLoader:
             self._tools_loaded = True
             
             logger.info(
-                f"Successfully loaded {len(tools)} MCP tool(s): "
+                f"Successfully loaded {len(tools)} MCP tool(s) with dynamic auth: "
                 f"{list(self._tools_cache.keys())}"
             )
             
@@ -164,7 +270,7 @@ class McpToolsLoader:
             logger.error(f"Failed to load MCP tools: {e}", exc_info=True)
             raise RuntimeError(
                 f"MCP tool loading failed: {e}. "
-                "Check MCP server connectivity and user authentication."
+                "Check MCP server connectivity and authentication."
             ) from e
     
     def after_agent(
@@ -174,7 +280,10 @@ class McpToolsLoader:
     ) -> dict[str, Any] | None:
         """Cleanup after agent execution.
         
-        Clears the user token from context to prevent leakage between executions.
+        For dynamic configs, clears the tools cache to ensure fresh loading
+        on next invocation (in case tokens change).
+        
+        For static configs, keeps tools cached permanently.
         
         Args:
             state: Current agent state (unused)
@@ -182,11 +291,15 @@ class McpToolsLoader:
             
         Returns:
             None
-
         """
-        # Clear token from context for security
-        clear_user_token()
-        logger.debug("Cleared user token from context")
+        if self.is_dynamic:
+            # Clear cache for dynamic configs to ensure fresh auth on next request
+            self._tools_cache.clear()
+            self._tools_loaded = False
+            logger.debug("Cleared dynamic MCP tools cache for next execution")
+        
+        # For static configs, keep tools cached permanently
+        
         return None
     
     def get_tool(self, tool_name: str) -> Any:  # noqa: ANN401
@@ -206,12 +319,14 @@ class McpToolsLoader:
             
         Example:
             >>> tool = middleware.get_tool("list_organizations")
-
         """
         if not self._tools_loaded:
+            mode = "dynamic" if self.is_dynamic else "static"
             raise RuntimeError(
-                "MCP tools not loaded yet. "
-                "Ensure middleware.before_agent() has been called."
+                f"MCP tools not loaded yet ({mode} mode). "
+                f"For static mode, this indicates initialization failure. "
+                f"For dynamic mode, ensure middleware.before_agent() has been called "
+                f"with proper config['configurable'] values."
             )
         
         if tool_name not in self._tools_cache:
@@ -222,4 +337,3 @@ class McpToolsLoader:
             )
         
         return self._tools_cache[tool_name]
-

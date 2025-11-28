@@ -247,72 +247,114 @@ agent = create_deep_agent(
 
 ## MCP Configuration
 
+Graphton's universal MCP authentication framework supports any MCP server configuration format and authentication method through template-based token injection.
+
+### Universal Authentication Framework
+
+The framework automatically detects two modes:
+
+**Static Mode** (no template variables):
+- Tools loaded once at agent creation time
+- Zero runtime overhead
+- Use for hardcoded credentials or public servers
+
+**Dynamic Mode** (with `{{VAR}}` templates):
+- Templates substituted from `config['configurable']` at invocation time
+- Tools loaded per-request with user-specific authentication
+- Use for multi-tenant systems or per-user tokens
+
 ### mcp_servers: dict[str, dict[str, Any]] | None = None
 
-MCP server configurations mapping server names to server config dictionaries.
+Raw MCP server configurations mapping server names to server config dictionaries.
 
-**Format** (compatible with Cursor's mcp.json):
+**Accepts any format** compatible with the MCP client. No structural validation - you control the configuration.
+
+**Template syntax**: Use `{{VAR_NAME}}` placeholders for dynamic values.
+
+**Dynamic configuration** (template variables - per-user auth):
 
 ```python
 mcp_servers = {
-    "server-name": {
+    "planton-cloud": {
         "transport": "streamable_http",
-        "url": "https://mcp.example.com/",
-        "auth_from_context": True,  # Default
-        "headers": {                 # Optional static headers
-            "X-Custom-Header": "value"
+        "url": "https://mcp.planton.ai/",
+        "headers": {
+            "Authorization": "Bearer {{USER_TOKEN}}"  # Substituted at runtime
         }
     }
 }
 ```
 
-**Server configuration fields**:
+**Static configuration** (no templates - shared credentials):
 
-- **transport** (str): Only `"streamable_http"` supported currently
-- **url** (str): HTTP(S) endpoint URL
-- **auth_from_context** (bool): Extract auth token from runtime context (default: `True`)
-- **headers** (dict, optional): Static headers to include in requests
+```python
+mcp_servers = {
+    "public-api": {
+        "transport": "http",
+        "url": "https://api.example.com/mcp",
+        "headers": {
+            "X-API-Key": "hardcoded-key-123"  # Same for all users
+        }
+    }
+}
+```
+
+**Mixed configuration** (multiple auth methods):
+
+```python
+mcp_servers = {
+    # Dynamic: Bearer token
+    "planton-cloud": {
+        "transport": "streamable_http",
+        "url": "https://mcp.planton.ai/",
+        "headers": {
+            "Authorization": "Bearer {{USER_TOKEN}}"
+        }
+    },
+    
+    # Dynamic: API Key
+    "external-api": {
+        "transport": "http",
+        "url": "{{BASE_URL}}/api",
+        "headers": {
+            "X-API-Key": "{{API_KEY}}"
+        }
+    },
+    
+    # Static: Hardcoded
+    "public-server": {
+        "transport": "http",
+        "url": "https://public.example.com",
+        "headers": {
+            "X-Client-ID": "client-123"
+        }
+    }
+}
+```
 
 **Validation rules**:
 - Must be provided together with `mcp_tools`
 - Server names must match between `mcp_servers` and `mcp_tools`
-- HTTPS recommended for production (HTTP triggers warning for non-localhost)
-- Static `Authorization` header triggers warning (conflicts with per-user auth)
+- Template variables must be provided in `config['configurable']` at invocation (dynamic mode only)
 
-**Examples**:
+**Supported authentication methods** (examples):
 
 ```python
-# ✅ Production configuration (HTTPS)
-mcp_servers = {
-    "planton-cloud": {
-        "transport": "streamable_http",
-        "url": "https://mcp.planton.ai/",
-    }
-}
+# Bearer token (OAuth, JWT)
+"headers": {"Authorization": "Bearer {{TOKEN}}"}
 
-# ✅ Local development (HTTP localhost - no warning)
-mcp_servers = {
-    "local-server": {
-        "transport": "streamable_http",
-        "url": "http://localhost:8000/",
-    }
-}
+# API Key
+"headers": {"X-API-Key": "{{API_KEY}}"}
 
-# ⚠️ HTTP non-localhost (warning issued)
-mcp_servers = {
-    "dev-server": {
-        "transport": "streamable_http",
-        "url": "http://dev.example.com/",  # UserWarning: insecure HTTP
-    }
-}
+# Basic Auth (encode credentials as base64)
+"headers": {"Authorization": "Basic {{BASIC_CREDS}}"}
 
-# ❌ Invalid transport
-mcp_servers = {
-    "server": {
-        "transport": "stdio",  # ValueError: Unsupported transport
-        "url": "https://mcp.example.com/",
-    }
+# Custom headers
+"headers": {
+    "X-Client-ID": "{{CLIENT_ID}}",
+    "X-Client-Secret": "{{CLIENT_SECRET}}"
 }
+```
 ```
 
 ### mcp_tools: dict[str, list[str]] | None = None
@@ -384,20 +426,26 @@ mcp_tools = {"server-b": ["tool1"]}  # ValueError: server names don't match
 
 ## Complete Example
 
+### Dynamic Authentication (Per-User Tokens)
+
 ```python
 from graphton import create_deep_agent
+import os
 
-# Comprehensive agent configuration
+# Agent with dynamic MCP authentication
 agent = create_deep_agent(
     # Required
     model="claude-sonnet-4.5",
     system_prompt="You are a Planton Cloud assistant helping users manage cloud resources.",
     
-    # MCP integration
+    # MCP integration with template variables
     mcp_servers={
         "planton-cloud": {
             "transport": "streamable_http",
             "url": "https://mcp.planton.ai/",
+            "headers": {
+                "Authorization": "Bearer {{USER_TOKEN}}"  # Template variable
+            }
         }
     },
     mcp_tools={
@@ -405,11 +453,7 @@ agent = create_deep_agent(
             "list_organizations",
             "list_environments_for_org",
             "search_cloud_resources",
-            "get_cloud_resource_by_id",
-            "get_cloud_resource_schema",
             "create_cloud_resource",
-            "update_cloud_resource",
-            "delete_cloud_resource",
         ]
     },
     
@@ -419,13 +463,98 @@ agent = create_deep_agent(
     temperature=0.3,
 )
 
-# Invoke with per-user authentication
-import os
+# Invoke with user-specific token
+# Template variable {{USER_TOKEN}} is substituted at runtime
 result = agent.invoke(
     {"messages": [{"role": "user", "content": "List my organizations"}]},
     config={
         "configurable": {
-            "_user_token": os.getenv("PLANTON_API_KEY")
+            "USER_TOKEN": os.getenv("PLANTON_API_KEY")  # Substituted into template
+        }
+    }
+)
+```
+
+### Static Authentication (Shared Credentials)
+
+```python
+# Agent with static MCP configuration
+# Tools loaded once at creation time
+agent = create_deep_agent(
+    model="claude-sonnet-4.5",
+    system_prompt="You are an API assistant.",
+    
+    mcp_servers={
+        "public-api": {
+            "transport": "http",
+            "url": "https://api.example.com/mcp",
+            "headers": {
+                "X-API-Key": "hardcoded-key-123"  # No templates = static
+            }
+        }
+    },
+    mcp_tools={
+        "public-api": ["search", "fetch"]
+    }
+)
+
+# Invoke without auth config - credentials already in config
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "Search for Python"}]}
+)
+```
+
+### Multi-Server with Mixed Authentication
+
+```python
+# Multiple servers with different auth methods
+agent = create_deep_agent(
+    model="claude-sonnet-4.5",
+    system_prompt="You are a multi-cloud assistant.",
+    
+    mcp_servers={
+        # Dynamic: User-specific Bearer token
+        "planton-cloud": {
+            "transport": "streamable_http",
+            "url": "https://mcp.planton.ai/",
+            "headers": {
+                "Authorization": "Bearer {{USER_TOKEN}}"
+            }
+        },
+        
+        # Dynamic: User-specific API key
+        "external-api": {
+            "transport": "http",
+            "url": "https://api.example.com",
+            "headers": {
+                "X-API-Key": "{{API_KEY}}"
+            }
+        },
+        
+        # Static: Shared credentials
+        "public-api": {
+            "transport": "http",
+            "url": "https://public.example.com",
+            "headers": {
+                "X-Client-ID": "client-123"
+            }
+        }
+    },
+    mcp_tools={
+        "planton-cloud": ["list_organizations"],
+        "external-api": ["search"],
+        "public-api": ["get_info"]
+    }
+)
+
+# Invoke with multiple template values
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "List resources"}]},
+    config={
+        "configurable": {
+            "USER_TOKEN": os.getenv("PLANTON_API_KEY"),
+            "API_KEY": os.getenv("EXTERNAL_API_KEY")
+            # No value needed for public-api (static)
         }
     }
 )
@@ -570,4 +699,5 @@ agent = create_deep_agent(
 - Type-safe configuration
 - IDE autocomplete support
 - Consistent patterns across agents
+
 

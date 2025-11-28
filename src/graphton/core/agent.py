@@ -16,7 +16,7 @@ from langgraph.graph.state import CompiledStateGraph
 from pydantic import ValidationError
 
 from graphton.core.models import parse_model_string
-from graphton.core.tool_wrappers import create_lazy_tool_wrapper, create_tool_wrapper
+from graphton.core.tool_wrappers import create_lazy_tool_wrapper
 
 
 def create_deep_agent(

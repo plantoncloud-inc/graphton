@@ -11,15 +11,22 @@ Key Features:
 """
 
 from graphton.core.agent import create_deep_agent
-from graphton.core.config import McpServerConfig, McpToolsConfig
+from graphton.core.config import AgentConfig
 from graphton.core.middleware import McpToolsLoader
+from graphton.core.template import (
+    extract_template_vars,
+    has_templates,
+    substitute_templates,
+)
 
 __version__ = "0.1.0"
 __all__ = [
     "__version__",
     "create_deep_agent",
-    "McpServerConfig",
-    "McpToolsConfig",
+    "AgentConfig",
     "McpToolsLoader",
+    "extract_template_vars",
+    "has_templates",
+    "substitute_templates",
 ]
 

@@ -46,10 +46,19 @@ def create_deep_agent(
             that map to full model IDs.
         system_prompt: The system prompt for the agent. This defines the agent's
             role, capabilities, and behavior.
-        mcp_servers: Optional dict of MCP server configurations. Maps server names
-            to configuration dicts with 'transport' and 'url' keys.
-            Example: {"planton-cloud": {"transport": "streamable_http", 
-                      "url": "https://mcp.planton.ai/"}}
+        mcp_servers: Optional dict of raw MCP server configurations. Accepts any format
+            compatible with the MCP client. Supports template variables like {{VAR_NAME}}
+            for dynamic token injection at runtime.
+            Example (dynamic): {"planton-cloud": {
+                "transport": "streamable_http",
+                "url": "https://mcp.planton.ai/",
+                "headers": {"Authorization": "Bearer {{USER_TOKEN}}"}
+            }}
+            Example (static): {"public-api": {
+                "transport": "http",
+                "url": "https://api.example.com/",
+                "headers": {"X-API-Key": "hardcoded-key-123"}
+            }}
         mcp_tools: Optional dict mapping server names to lists of tool names to load.
             Example: {"planton-cloud": ["list_organizations", "create_cloud_resource"]}
             Requires mcp_servers to be provided.
@@ -105,7 +114,7 @@ def create_deep_agent(
         ...     system_prompt="You are a research assistant.",
         ... )
         
-        Agent with MCP tools (Phase 3):
+        Agent with MCP tools (dynamic auth with templates):
         
         >>> agent = create_deep_agent(
         ...     model="claude-sonnet-4.5",
@@ -113,17 +122,20 @@ def create_deep_agent(
         ...     mcp_servers={
         ...         "planton-cloud": {
         ...             "transport": "streamable_http",
-        ...             "url": "https://mcp.planton.ai/"
+        ...             "url": "https://mcp.planton.ai/",
+        ...             "headers": {
+        ...                 "Authorization": "Bearer {{USER_TOKEN}}"
+        ...             }
         ...         }
         ...     },
         ...     mcp_tools={
         ...         "planton-cloud": ["list_organizations", "create_cloud_resource"]
         ...     }
         ... )
-        >>> # Invoke with user token
+        >>> # Invoke with user token - will be substituted into {{USER_TOKEN}}
         >>> result = agent.invoke(
         ...     {"messages": [{"role": "user", "content": "List organizations"}]},
-        ...     config={"configurable": {"_user_token": "your-token-here"}}
+        ...     config={"configurable": {"USER_TOKEN": "your-token-here"}}
         ... )
     
     """
@@ -179,10 +191,9 @@ def create_deep_agent(
     tools_list = list(tools or [])
     middleware_list = list(middleware or [])
     
-    # MCP integration (Phase 3)
+    # MCP integration (Universal Authentication Framework)
     if mcp_servers and mcp_tools:
         # Import MCP modules only when needed
-        from graphton.core.config import parse_mcp_server_config
         from graphton.core.middleware import McpToolsLoader
         from graphton.core.tool_wrappers import create_tool_wrapper
         
@@ -198,15 +209,11 @@ def create_deep_agent(
                 "Specify which tools to load from each server."
             )
         
-        # Parse and validate server configurations
-        parsed_servers = {
-            name: parse_mcp_server_config(cfg)
-            for name, cfg in mcp_servers.items()
-        }
-        
-        # Create MCP tools loader middleware
+        # Create MCP tools loader middleware with raw server configs
+        # The middleware will automatically detect static vs dynamic configs
+        # and handle template substitution if needed
         mcp_middleware = McpToolsLoader(
-            servers=parsed_servers,
+            servers=mcp_servers,  # Pass raw configs directly
             tool_filter=mcp_tools,
         )
         

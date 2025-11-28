@@ -90,3 +90,4 @@ def has_user_token() -> bool:
     token = _user_token_var.get()
     return token is not None and token.strip() != ""
 
+

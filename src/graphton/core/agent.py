@@ -16,6 +16,7 @@ from langgraph.graph.state import CompiledStateGraph
 from pydantic import ValidationError
 
 from graphton.core.models import parse_model_string
+from graphton.core.prompt_enhancement import enhance_user_instructions
 from graphton.core.tool_wrappers import create_lazy_tool_wrapper
 
 
@@ -30,6 +31,7 @@ def create_deep_agent(
     recursion_limit: int = 100,
     max_tokens: int | None = None,
     temperature: float | None = None,
+    auto_enhance_prompt: bool = True,
     **model_kwargs: Any,  # noqa: ANN401
 ) -> CompiledStateGraph:
     """Create a Deep Agent with minimal boilerplate.
@@ -40,13 +42,16 @@ def create_deep_agent(
     - Automatically applying recursion limits
     - Supporting both string-based and instance-based model configuration
     - Auto-loading MCP tools with per-user authentication (Phase 3)
+    - Auto-enhancing prompts with capability awareness (Phase 5)
     
     Args:
         model: Model name string (e.g., "claude-sonnet-4.5", "gpt-4o") or
             a LangChain model instance. String format supports friendly names
             that map to full model IDs.
         system_prompt: The system prompt for the agent. This defines the agent's
-            role, capabilities, and behavior.
+            role, capabilities, and behavior. When auto_enhance_prompt is True
+            (default), this will be automatically enriched with awareness of
+            Deep Agents capabilities (planning, file system, MCP tools).
         mcp_servers: Optional dict of raw MCP server configurations. Accepts any format
             compatible with the MCP client. Supports template variables like {{VAR_NAME}}
             for dynamic token injection at runtime.
@@ -76,6 +81,12 @@ def create_deep_agent(
         temperature: Override default temperature for the model. Higher values
             (e.g., 0.7-1.0) make output more creative, lower values (e.g., 0.0-0.3)
             make it more deterministic.
+        auto_enhance_prompt: Whether to automatically enhance the system_prompt with
+            awareness of Deep Agents capabilities (default: True). When enabled,
+            high-level context about planning system, file system, and MCP tools
+            is appended to user instructions. This helps agents effectively use
+            available capabilities without requiring users to know framework internals.
+            Set to False to use system_prompt as-is without enhancement.
         **model_kwargs: Additional model-specific parameters to pass to the model
             constructor (e.g., top_p, top_k for Anthropic).
     
@@ -138,6 +149,21 @@ def create_deep_agent(
         ...     {"messages": [{"role": "user", "content": "List organizations"}]},
         ...     config={"configurable": {"USER_TOKEN": "your-token-here"}}
         ... )
+        
+        Agent with prompt enhancement disabled:
+        
+        >>> agent = create_deep_agent(
+        ...     model="claude-sonnet-4.5",
+        ...     system_prompt="Detailed instructions with all context already included.",
+        ...     auto_enhance_prompt=False,  # Use prompt as-is
+        ... )
+    
+    Note:
+        System prompt enhancement is automatic by default. If your system_prompt
+        already mentions planning or file system capabilities, some redundancy
+        will occur. This is intentional and acceptable - LLMs handle redundant
+        information gracefully, and reinforcement is better than missing critical
+        context about available capabilities.
     
     """
     # Validate configuration using AgentConfig model
@@ -244,11 +270,20 @@ def create_deep_agent(
             "Cannot configure one without the other."
         )
     
+    # Enhance user instructions with capability awareness (Phase 5)
+    if auto_enhance_prompt:
+        enhanced_prompt = enhance_user_instructions(
+            system_prompt,
+            has_mcp_tools=bool(mcp_servers and mcp_tools),
+        )
+    else:
+        enhanced_prompt = system_prompt
+    
     # Create the Deep Agent using deepagents library
     agent = deepagents_create_deep_agent(
         model=model_instance,
         tools=tools_list,
-        system_prompt=system_prompt,
+        system_prompt=enhanced_prompt,
         middleware=middleware_list,
         context_schema=context_schema,
     )

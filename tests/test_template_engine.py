@@ -392,3 +392,6 @@ class TestRealWorldScenarios:
         result = substitute_templates(config, {})
         assert result == config
 
+
+
+

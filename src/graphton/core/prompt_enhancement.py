@@ -60,6 +60,7 @@ def enhance_user_instructions(
         redundancy will occur. This is intentional and acceptable - LLMs
         handle redundant information gracefully, and reinforcement is better
         than missing critical context.
+
     """
     if not user_instructions or not user_instructions.strip():
         raise ValueError("user_instructions cannot be empty")

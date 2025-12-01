@@ -7,8 +7,6 @@ where an event loop is already running.
 
 import asyncio
 
-import pytest
-
 from graphton.core.middleware import McpToolsLoader
 
 
@@ -84,7 +82,7 @@ class TestAsyncContextInitialization:
         
         result = {}
         
-        def init_middleware():
+        def init_middleware() -> None:
             servers = {
                 "test-server": {
                     "transport": "http",
@@ -177,7 +175,7 @@ class TestEventLoopDetection:
         
         result = {}
         
-        def check_loop():
+        def check_loop() -> None:
             try:
                 # Try to get event loop when none exists
                 loop = asyncio.get_event_loop()

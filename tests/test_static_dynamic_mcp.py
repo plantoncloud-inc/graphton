@@ -318,3 +318,6 @@ class TestRealWorldScenarios:
         assert middleware.is_dynamic is True
         assert middleware.template_vars == {"USER_TOKEN", "API_KEY"}
 
+
+
+

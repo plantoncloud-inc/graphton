@@ -1161,3 +1161,6 @@ $ poetry run pytest tests/ -v --tb=no -q
 4. Monitor performance in production (static vs dynamic modes)
 
 
+
+
+

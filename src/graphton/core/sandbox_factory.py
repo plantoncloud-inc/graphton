@@ -40,11 +40,20 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
         ValueError: If required configuration parameters are missing.
     
     Examples:
-        Create Daytona sandbox backend (full execution support):
+        Create Daytona sandbox backend with pre-built snapshot (recommended):
+        
+        >>> config = {
+        ...     "type": "daytona",
+        ...     "snapshot_id": "snap-abc123"  # Pre-built with all CLIs
+        ... }
+        >>> backend = create_sandbox_backend(config)
+        >>> # Requires DAYTONA_API_KEY environment variable
+        >>> # Instant spin-up from snapshot with all tools pre-installed
+        
+        Create vanilla Daytona sandbox:
         
         >>> config = {"type": "daytona"}
         >>> backend = create_sandbox_backend(config)
-        >>> # Requires DAYTONA_API_KEY environment variable
         >>> # Agent will have execute tool enabled for shell commands
         
         Create filesystem backend (file operations only):
@@ -82,6 +91,7 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
         try:
             from deepagents_cli.integrations.daytona import DaytonaBackend  # type: ignore[import-untyped]
             from daytona import Daytona, DaytonaConfig  # type: ignore[import-untyped]
+            from daytona.common.daytona import CreateSandboxFromSnapshotParams  # type: ignore[import-untyped]
         except ImportError as e:
             raise ValueError(
                 f"Daytona backend requires 'daytona' package. "
@@ -96,9 +106,20 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
                 "DAYTONA_API_KEY environment variable."
             )
         
-        # Create Daytona client and sandbox
+        # Get optional snapshot_id from config
+        snapshot_id = config.get("snapshot_id")
+        
+        # Create Daytona client
         daytona = Daytona(DaytonaConfig(api_key=api_key))
-        sandbox = daytona.create()
+        
+        # Create sandbox with or without snapshot
+        if snapshot_id:
+            # Create from pre-built snapshot for instant spin-up
+            params = CreateSandboxFromSnapshotParams(snapshot=snapshot_id)
+            sandbox = daytona.create(params=params)
+        else:
+            # Create vanilla sandbox
+            sandbox = daytona.create()
         
         # Poll until sandbox is ready (Daytona requires this)
         for _ in range(90):  # 180s timeout (90 * 2s)

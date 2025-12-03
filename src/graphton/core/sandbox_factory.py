@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from deepagents.backends.protocol import BackendProtocol
+from deepagents.backends.protocol import BackendProtocol  # type: ignore[import-untyped]
 
 
 def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
@@ -50,6 +50,7 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
         >>> config = {"type": "filesystem"}
         >>> backend = create_sandbox_backend(config)
         >>> # Uses current working directory as root
+    
     """
     if not isinstance(config, dict):
         raise ValueError(
@@ -66,7 +67,7 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
     
     if backend_type == "filesystem":
         # Import only when needed to avoid hard dependencies
-        from deepagents.backends import FilesystemBackend
+        from deepagents.backends import FilesystemBackend  # type: ignore[import-untyped]
         
         root_dir = config.get("root_dir", ".")
         return FilesystemBackend(root_dir=root_dir)

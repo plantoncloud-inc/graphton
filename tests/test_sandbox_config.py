@@ -71,11 +71,11 @@ class TestSandboxBackendFactory:
         with pytest.raises(ValueError, match="Runloop sandbox support coming soon"):
             create_sandbox_backend(config)
     
-    def test_daytona_not_yet_supported(self) -> None:
-        """Test that daytona type returns helpful error message."""
+    def test_daytona_requires_package(self) -> None:
+        """Test that daytona type requires daytona package to be installed."""
         config = {"type": "daytona"}
         
-        with pytest.raises(ValueError, match="Daytona sandbox support coming soon"):
+        with pytest.raises(ValueError, match="Daytona backend requires 'daytona' package"):
             create_sandbox_backend(config)
     
     def test_harbor_not_yet_supported(self) -> None:
@@ -179,15 +179,23 @@ class TestSandboxConfigValidation:
             # Should pass validation (may fail at backend creation for unsupported types)
             # but validation itself should succeed
             if sandbox_type == "filesystem":
-                # Only filesystem actually works
+                # Only filesystem actually works without additional dependencies
                 agent = create_deep_agent(
                     model="claude-sonnet-4.5",
                     system_prompt="You are a helpful assistant.",
                     sandbox_config=config
                 )
                 assert isinstance(agent, CompiledStateGraph)
+            elif sandbox_type == "daytona":
+                # Daytona is implemented but requires the daytona package
+                with pytest.raises(ValueError, match="Daytona backend requires 'daytona' package"):
+                    create_deep_agent(
+                        model="claude-sonnet-4.5",
+                        system_prompt="You are a helpful assistant.",
+                        sandbox_config=config
+                    )
             else:
-                # Others should fail at backend creation, not validation
+                # Others should fail at backend creation with "coming soon" message
                 with pytest.raises(ValueError, match="support coming soon"):
                     create_deep_agent(
                         model="claude-sonnet-4.5",

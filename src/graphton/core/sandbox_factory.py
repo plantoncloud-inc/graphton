@@ -89,12 +89,12 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
         import time
         
         try:
-            from daytona import Daytona, DaytonaConfig  # type: ignore[import-untyped]
-            from daytona.common.daytona import (
-                CreateSandboxFromSnapshotParams,  # type: ignore[import-untyped]
+            from daytona import Daytona, DaytonaConfig  # type: ignore[import-not-found]
+            from daytona.common.daytona import (  # type: ignore[import-not-found]
+                CreateSandboxFromSnapshotParams,
             )
-            from deepagents_cli.integrations.daytona import (
-                DaytonaBackend,  # type: ignore[import-untyped]
+            from deepagents_cli.integrations.daytona import (  # type: ignore[import-not-found]
+                DaytonaBackend,
             )
         except ImportError as e:
             raise ValueError(
@@ -154,12 +154,6 @@ def create_sandbox_backend(config: dict[str, Any]) -> BackendProtocol:
     elif backend_type == "runloop":
         raise ValueError(
             "Runloop sandbox support coming soon. "
-            "For now, use 'filesystem' type for local execution."
-        )
-    
-    elif backend_type == "daytona":
-        raise ValueError(
-            "Daytona sandbox support coming soon. "
             "For now, use 'filesystem' type for local execution."
         )
     

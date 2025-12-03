@@ -27,6 +27,7 @@ def create_deep_agent(
     tools: Sequence[BaseTool] | None = None,
     middleware: Sequence[Any] | None = None,
     context_schema: type[Any] | None = None,
+    sandbox_config: dict[str, Any] | None = None,
     recursion_limit: int = 100,
     max_tokens: int | None = None,
     temperature: float | None = None,
@@ -69,6 +70,12 @@ def create_deep_agent(
             MCP tool loading middleware will be auto-injected if MCP configured.
         context_schema: Optional state schema for the agent. Defaults to FilesystemState
             from deepagents, which provides file system operations.
+        sandbox_config: Optional dict configuring sandbox backend for file operations.
+            Enables file system tools (read, write, edit, ls, glob, grep).
+            Configuration format: {"type": "filesystem", "root_dir": "/workspace"}
+            Supported types: filesystem (file ops only), modal, runloop, daytona, harbor.
+            Note: 'filesystem' type provides file operations but execute tool returns error.
+            If not provided, uses default ephemeral state backend.
         recursion_limit: Maximum recursion depth for the agent (default: 100).
             This prevents infinite loops in agent reasoning.
         max_tokens: Override default max_tokens for the model. Defaults depend on
@@ -138,6 +145,21 @@ def create_deep_agent(
         ...     {"messages": [{"role": "user", "content": "List organizations"}]},
         ...     config={"configurable": {"USER_TOKEN": "your-token-here"}}
         ... )
+        
+        Agent with filesystem backend:
+        
+        >>> agent = create_deep_agent(
+        ...     model="claude-sonnet-4.5",
+        ...     system_prompt="You are a file management assistant.",
+        ...     sandbox_config={
+        ...         "type": "filesystem",
+        ...         "root_dir": "/workspace"
+        ...     }
+        ... )
+        >>> # Agent can perform file operations (read, write, edit, ls, glob, grep)
+        >>> result = agent.invoke(
+        ...     {"messages": [{"role": "user", "content": "List files in current directory"}]}
+        ... )
     
     """
     # Validate configuration using AgentConfig model
@@ -154,6 +176,7 @@ def create_deep_agent(
             tools=tools,
             middleware=middleware,
             context_schema=context_schema,
+            sandbox_config=sandbox_config,
             recursion_limit=recursion_limit,
             max_tokens=max_tokens,
             temperature=temperature,
@@ -249,6 +272,12 @@ def create_deep_agent(
             "Cannot configure one without the other."
         )
     
+    # Create sandbox backend if configured (for terminal execution support)
+    backend = None
+    if sandbox_config:
+        from graphton.core.sandbox_factory import create_sandbox_backend
+        backend = create_sandbox_backend(sandbox_config)
+    
     # Create the Deep Agent using deepagents library
     agent = deepagents_create_deep_agent(
         model=model_instance,
@@ -256,6 +285,7 @@ def create_deep_agent(
         system_prompt=system_prompt,
         middleware=middleware_list,
         context_schema=context_schema,
+        backend=backend,
     )
     
     # Apply recursion limit configuration

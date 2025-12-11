@@ -287,7 +287,8 @@ def create_deep_agent(
         # (Fixes: Dec 11 removal of lazy wrappers broke async contexts)
         if mcp_middleware._deferred_loading:
             import asyncio
-            import nest_asyncio
+
+            import nest_asyncio  # type: ignore[import-untyped]
             
             # Allow nested event loops (needed when called from async context)
             nest_asyncio.apply()

@@ -287,6 +287,11 @@ def create_deep_agent(
         # (Fixes: Dec 11 removal of lazy wrappers broke async contexts)
         if mcp_middleware._deferred_loading:
             import asyncio
+            import nest_asyncio
+            
+            # Allow nested event loops (needed when called from async context)
+            nest_asyncio.apply()
+            
             # Load tools asynchronously before creating wrappers
             asyncio.get_event_loop().run_until_complete(
                 mcp_middleware._load_tools_async()

@@ -75,7 +75,7 @@ Force async tool loading BEFORE creating wrappers when deferred loading is detec
 
 ### Implementation
 
-**File:** `src/graphton/core/agent.py` (lines 284-292)
+**File:** `src/graphton/core/agent.py` (lines 284-298)
 
 **Added:**
 ```python
@@ -90,6 +90,11 @@ mcp_middleware = McpToolsLoader(
 # (Fixes: Dec 11 removal of lazy wrappers broke async contexts)
 if mcp_middleware._deferred_loading:
     import asyncio
+    import nest_asyncio
+    
+    # Allow nested event loops (needed when called from async context)
+    nest_asyncio.apply()
+    
     # Load tools asynchronously before creating wrappers
     asyncio.get_event_loop().run_until_complete(
         mcp_middleware._load_tools_async()
@@ -104,6 +109,8 @@ for server_name, tool_names in mcp_tools.items():
         wrapper = create_tool_wrapper(tool_name, mcp_middleware)
         mcp_tool_wrappers.append(wrapper)
 ```
+
+**Dependency Added:** `nest-asyncio>=1.6.0` to `pyproject.toml`
 
 ---
 
@@ -194,11 +201,13 @@ $ cd graphton && poetry run pytest tests/ -v --tb=short
 
 ## Design Notes
 
-### Why Sync-Over-Async?
+### Why Sync-Over-Async with nest_asyncio?
 
-We use `run_until_complete()` to load tools synchronously in an async context:
+We use `nest_asyncio` + `run_until_complete()` to load tools synchronously in an async context:
 
 ```python
+import nest_asyncio
+nest_asyncio.apply()
 asyncio.get_event_loop().run_until_complete(
     mcp_middleware._load_tools_async()
 )
@@ -208,9 +217,16 @@ asyncio.get_event_loop().run_until_complete(
 - Graph construction is synchronous (`create_deep_agent()` is not async)
 - Tools must be loaded before wrappers are created
 - Cannot await in sync function
-- `run_until_complete()` is the standard pattern for this scenario
+- Temporal activities run in an async event loop (already running)
+- Native `run_until_complete()` fails with "event loop already running"
+- `nest_asyncio` allows nested event loops to work correctly
 
 **Alternative rejected**: Making `create_deep_agent()` async would be a breaking API change affecting all users.
+
+**Why nest_asyncio is safe here:**
+- Only applied when `_deferred_loading = True` (async context detected)
+- Well-tested library used by Jupyter, IPython, and other async environments
+- Solves the exact problem: sync code calling async code in running event loop
 
 ### Why Not Move Loading to Middleware?
 

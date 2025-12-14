@@ -14,7 +14,7 @@ A clear and concise description of what the bug is.
 
 Steps to reproduce the behavior:
 
-1. Install Graphton: `pip install git+https://github.com/plantoncloud-inc/graphton.git@vX.Y.Z`
+1. Install Graphton: `pip install git+https://github.com/plantoncloud/graphton.git@vX.Y.Z`
 2. Create agent with: '...'
 3. Invoke with: '...'
 4. See error
@@ -94,4 +94,4 @@ Before submitting, please check:
 - [ ] I have provided a minimal reproducible example
 - [ ] I have included the complete error message
 - [ ] I have specified my environment details
-- [ ] I have checked the [Troubleshooting Guide](https://github.com/plantoncloud-inc/graphton/blob/main/docs/TROUBLESHOOTING.md)
+- [ ] I have checked the [Troubleshooting Guide](https://github.com/plantoncloud/graphton/blob/main/docs/TROUBLESHOOTING.md)

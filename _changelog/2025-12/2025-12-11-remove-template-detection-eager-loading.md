@@ -222,3 +222,13 @@ Removing template detection aligns Graphton's implementation with its actual usa
 
 The original template detection feature was well-intentioned but based on assumptions that didn't match production usage.
 
+
+
+
+
+
+
+
+
+
+

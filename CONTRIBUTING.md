@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Graphton! This guide will help yo
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/plantoncloud-inc/graphton.git
+   git clone https://github.com/plantoncloud/graphton.git
    cd graphton
    ```
 

@@ -37,7 +37,7 @@ These examples demonstrate how to use Graphton to create production-ready LangGr
 1. **Python 3.11+** installed
 2. **Graphton** installed:
    ```bash
-   pip install git+https://github.com/plantoncloud-inc/graphton.git
+   pip install git+https://github.com/plantoncloud/graphton.git
    ```
 
 3. **LLM API Keys** (at least one):
@@ -703,7 +703,7 @@ agent = create_deep_agent(
 
 **Solution:**
 ```bash
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 ### "ANTHROPIC_API_KEY not found"
@@ -766,7 +766,7 @@ After exploring examples:
 
 Found an issue or want to add an example?
 
-1. Open an issue: https://github.com/plantoncloud-inc/graphton/issues
+1. Open an issue: https://github.com/plantoncloud/graphton/issues
 2. Submit a PR with your example
 3. Follow [Contributing Guidelines](../CONTRIBUTING.md)
 

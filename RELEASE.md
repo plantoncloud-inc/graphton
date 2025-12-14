@@ -44,7 +44,7 @@ Graphton uses **semantic versioning** (MAJOR.MINOR.PATCH) and follows a **tag-ba
   ```
 
 - [ ] CI/CD pipeline is green
-  - Check GitHub Actions: https://github.com/plantoncloud-inc/graphton/actions
+  - Check GitHub Actions: https://github.com/plantoncloud/graphton/actions
 
 ### 2. Documentation
 
@@ -99,7 +99,7 @@ Graphton uses **semantic versioning** (MAJOR.MINOR.PATCH) and follows a **tag-ba
 
 - [ ] Install from main branch
   ```bash
-  pip install git+https://github.com/plantoncloud-inc/graphton.git@main
+  pip install git+https://github.com/plantoncloud/graphton.git@main
   ```
 
 - [ ] Run examples
@@ -113,7 +113,7 @@ Graphton uses **semantic versioning** (MAJOR.MINOR.PATCH) and follows a **tag-ba
   ```bash
   python -m venv test_env
   source test_env/bin/activate
-  pip install git+https://github.com/plantoncloud-inc/graphton.git@main
+  pip install git+https://github.com/plantoncloud/graphton.git@main
   python -c "from graphton import create_deep_agent; print('✅ Import successful')"
   deactivate
   rm -rf test_env
@@ -143,7 +143,7 @@ git show v0.1.0
 git push origin v0.1.0
 
 # Verify tag on GitHub
-open https://github.com/plantoncloud-inc/graphton/tags
+open https://github.com/plantoncloud/graphton/tags
 ```
 
 ### Step 3: Create GitHub Release
@@ -176,7 +176,7 @@ First stable release of Graphton - a declarative agent creation framework for La
 ## Installation
 
 ```bash
-pip install git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+pip install git+https://github.com/plantoncloud/graphton.git@v0.1.0
 ```
 
 ## Quick Start
@@ -194,11 +194,11 @@ result = agent.invoke({
 })
 ```
 
-See [README.md](https://github.com/plantoncloud-inc/graphton#readme) for more details.
+See [README.md](https://github.com/plantoncloud/graphton#readme) for more details.
 
 ## Full Changelog
 
-See [CHANGELOG.md](https://github.com/plantoncloud-inc/graphton/blob/v0.1.0/CHANGELOG.md) for complete list of changes.
+See [CHANGELOG.md](https://github.com/plantoncloud/graphton/blob/v0.1.0/CHANGELOG.md) for complete list of changes.
 
 ## Breaking Changes
 
@@ -214,7 +214,7 @@ EOF
 
 #### Option B: Using GitHub Web Interface
 
-1. Go to: https://github.com/plantoncloud-inc/graphton/releases/new
+1. Go to: https://github.com/plantoncloud/graphton/releases/new
 2. Select tag: `v0.1.0`
 3. Set title: `v0.1.0`
 4. Add release notes (see template above)
@@ -227,7 +227,7 @@ EOF
 gh release view v0.1.0
 
 # Or visit GitHub
-open https://github.com/plantoncloud-inc/graphton/releases/tag/v0.1.0
+open https://github.com/plantoncloud/graphton/releases/tag/v0.1.0
 ```
 
 ## Post-Release Tasks
@@ -242,7 +242,7 @@ python -m venv release_test
 source release_test/bin/activate
 
 # Install from release tag
-pip install git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+pip install git+https://github.com/plantoncloud/graphton.git@v0.1.0
 
 # Verify version
 python -c "import graphton; print(f'Graphton {graphton.__version__}')"
@@ -269,7 +269,7 @@ If any projects depend on Graphton (e.g., graph-fleet), update them:
 ```toml
 # pyproject.toml in dependent project
 [tool.poetry.dependencies]
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", tag = "v0.1.0"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", tag = "v0.1.0"}
 ```
 
 ```bash
@@ -481,9 +481,9 @@ gh release create v0.1.0 --title "v0.1.0" --notes "..."
 
 ## Questions?
 
-- Open a discussion: https://github.com/plantoncloud-inc/graphton/discussions
+- Open a discussion: https://github.com/plantoncloud/graphton/discussions
 - Contact maintainers: security@planton.ai
-- Review past releases: https://github.com/plantoncloud-inc/graphton/releases
+- Review past releases: https://github.com/plantoncloud/graphton/releases
 
 ## Related Documents
 

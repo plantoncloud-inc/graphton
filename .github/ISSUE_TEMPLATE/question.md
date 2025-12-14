@@ -53,14 +53,14 @@ Any other information that might help us answer your question.
 
 ---
 
-**Note:** For general discussions, consider using [GitHub Discussions](https://github.com/plantoncloud-inc/graphton/discussions) instead of opening an issue.
+**Note:** For general discussions, consider using [GitHub Discussions](https://github.com/plantoncloud/graphton/discussions) instead of opening an issue.
 
 ## Before Submitting
 
 Please check:
 
-- [ ] I have read the [README](https://github.com/plantoncloud-inc/graphton#readme)
-- [ ] I have checked the [Configuration Guide](https://github.com/plantoncloud-inc/graphton/blob/main/docs/CONFIGURATION.md)
-- [ ] I have reviewed the [Examples](https://github.com/plantoncloud-inc/graphton/tree/main/examples)
+- [ ] I have read the [README](https://github.com/plantoncloud/graphton#readme)
+- [ ] I have checked the [Configuration Guide](https://github.com/plantoncloud/graphton/blob/main/docs/CONFIGURATION.md)
+- [ ] I have reviewed the [Examples](https://github.com/plantoncloud/graphton/tree/main/examples)
 - [ ] I have searched existing issues and discussions
 - [ ] This is a question, not a bug report or feature request

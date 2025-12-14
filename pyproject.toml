@@ -5,9 +5,9 @@ description = "Declarative agent creation framework for LangGraph"
 authors = ["Suresh Attaluri <suresh@planton.ai>"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/plantoncloud-inc/graphton"
-repository = "https://github.com/plantoncloud-inc/graphton"
-documentation = "https://github.com/plantoncloud-inc/graphton#readme"
+homepage = "https://github.com/plantoncloud/graphton"
+repository = "https://github.com/plantoncloud/graphton"
+documentation = "https://github.com/plantoncloud/graphton#readme"
 keywords = ["langgraph", "langchain", "agents", "mcp", "ai"]
 classifiers = [
     "Development Status :: 3 - Alpha",

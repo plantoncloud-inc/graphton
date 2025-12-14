@@ -27,10 +27,10 @@ Complete installation guide for Graphton, covering multiple installation methods
 
 ```bash
 # Using pip
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 
 # Using Poetry
-poetry add git+https://github.com/plantoncloud-inc/graphton.git
+poetry add git+https://github.com/plantoncloud/graphton.git
 ```
 
 ## Installation Methods
@@ -40,27 +40,27 @@ poetry add git+https://github.com/plantoncloud-inc/graphton.git
 #### Latest Version (main branch)
 
 ```bash
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 #### Specific Version (recommended for production)
 
 ```bash
 # Install specific release tag
-pip install git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+pip install git+https://github.com/plantoncloud/graphton.git@v0.1.0
 
 # Install specific commit
-pip install git+https://github.com/plantoncloud-inc/graphton.git@9a24cf7
+pip install git+https://github.com/plantoncloud/graphton.git@9a24cf7
 ```
 
 #### With Extras (if available)
 
 ```bash
 # Install with all extras
-pip install "git+https://github.com/plantoncloud-inc/graphton.git[dev]"
+pip install "git+https://github.com/plantoncloud/graphton.git[dev]"
 
 # Install with specific extras
-pip install "git+https://github.com/plantoncloud-inc/graphton.git[test]"
+pip install "git+https://github.com/plantoncloud/graphton.git[test]"
 ```
 
 #### In requirements.txt
@@ -69,13 +69,13 @@ Add to your `requirements.txt`:
 
 ```
 # Latest version
-git+https://github.com/plantoncloud-inc/graphton.git
+git+https://github.com/plantoncloud/graphton.git
 
 # Specific version (recommended)
-git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+git+https://github.com/plantoncloud/graphton.git@v0.1.0
 
 # With extras
-git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0#egg=graphton[dev]
+git+https://github.com/plantoncloud/graphton.git@v0.1.0#egg=graphton[dev]
 ```
 
 Then install:
@@ -90,13 +90,13 @@ pip install -r requirements.txt
 
 ```bash
 # Latest version
-poetry add git+https://github.com/plantoncloud-inc/graphton.git
+poetry add git+https://github.com/plantoncloud/graphton.git
 
 # Specific version (recommended)
-poetry add git+https://github.com/plantoncloud-inc/graphton.git#v0.1.0
+poetry add git+https://github.com/plantoncloud/graphton.git#v0.1.0
 
 # Specific commit
-poetry add git+https://github.com/plantoncloud-inc/graphton.git#9a24cf7
+poetry add git+https://github.com/plantoncloud/graphton.git#9a24cf7
 ```
 
 #### In pyproject.toml
@@ -108,16 +108,16 @@ Add to your `pyproject.toml`:
 python = ">=3.11,<4.0"
 
 # Latest version
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git"}
 
 # Specific tag (recommended for production)
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", tag = "v0.1.0"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", tag = "v0.1.0"}
 
 # Specific branch
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", branch = "main"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", branch = "main"}
 
 # Specific commit
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", rev = "9a24cf7"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", rev = "9a24cf7"}
 ```
 
 Then install:
@@ -132,7 +132,7 @@ For development or contributing:
 
 ```bash
 # Clone repository
-git clone https://github.com/plantoncloud-inc/graphton.git
+git clone https://github.com/plantoncloud/graphton.git
 cd graphton
 
 # Install with pip (editable mode)
@@ -157,21 +157,21 @@ Version pinning ensures reproducible builds and prevents unexpected breaking cha
 
 ```toml
 # pyproject.toml - Pin to specific tag
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", tag = "v0.1.0"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", tag = "v0.1.0"}
 ```
 
 **For Development:**
 
 ```toml
 # pyproject.toml - Use branch for latest features
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", branch = "main"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", branch = "main"}
 ```
 
 **For Testing Specific Changes:**
 
 ```toml
 # pyproject.toml - Pin to specific commit
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", rev = "9a24cf7"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", rev = "9a24cf7"}
 ```
 
 ### Version History
@@ -180,10 +180,10 @@ Check available versions:
 
 ```bash
 # List all tags
-git ls-remote --tags https://github.com/plantoncloud-inc/graphton.git
+git ls-remote --tags https://github.com/plantoncloud/graphton.git
 
 # View releases on GitHub
-open https://github.com/plantoncloud-inc/graphton/releases
+open https://github.com/plantoncloud/graphton/releases
 ```
 
 ## Dependency Management
@@ -208,12 +208,12 @@ If you encounter dependency conflicts:
 
 ```bash
 # Use dependency resolver
-pip install --use-feature=2020-resolver git+https://github.com/plantoncloud-inc/graphton.git
+pip install --use-feature=2020-resolver git+https://github.com/plantoncloud/graphton.git
 
 # Or install in isolated environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 **With Poetry:**
@@ -371,10 +371,10 @@ print(f"Graphton version: {graphton.__version__}")
 
 ```bash
 # Upgrade to latest main branch
-pip install --upgrade git+https://github.com/plantoncloud-inc/graphton.git
+pip install --upgrade git+https://github.com/plantoncloud/graphton.git
 
 # Upgrade to specific version
-pip install --upgrade git+https://github.com/plantoncloud-inc/graphton.git@v0.2.0
+pip install --upgrade git+https://github.com/plantoncloud/graphton.git@v0.2.0
 ```
 
 **With Poetry:**
@@ -450,18 +450,18 @@ open https://www.python.org/downloads/
 
 ```bash
 # Try with verbose output
-pip install -v git+https://github.com/plantoncloud-inc/graphton.git
+pip install -v git+https://github.com/plantoncloud/graphton.git
 
 # Check your network connection
 ping github.com
 
 # Try with different resolver
-pip install --use-feature=2020-resolver git+https://github.com/plantoncloud-inc/graphton.git
+pip install --use-feature=2020-resolver git+https://github.com/plantoncloud/graphton.git
 
 # Or use isolated environment
 python -m venv clean_env
 source clean_env/bin/activate
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 #### "Permission denied" errors
@@ -472,12 +472,12 @@ pip install git+https://github.com/plantoncloud-inc/graphton.git
 
 ```bash
 # Install for user only
-pip install --user git+https://github.com/plantoncloud-inc/graphton.git
+pip install --user git+https://github.com/plantoncloud/graphton.git
 
 # Or use virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 #### "Git not found" or "Git command failed"
@@ -508,10 +508,10 @@ git --version
 
 ```bash
 # Use HTTPS (recommended)
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 
 # Instead of SSH
-# pip install git+ssh://git@github.com/plantoncloud-inc/graphton.git
+# pip install git+ssh://git@github.com/plantoncloud/graphton.git
 ```
 
 ### Import Issues
@@ -531,7 +531,7 @@ which python
 python -c "import sys; print(sys.prefix)"
 
 # Reinstall if needed
-pip install --force-reinstall git+https://github.com/plantoncloud-inc/graphton.git
+pip install --force-reinstall git+https://github.com/plantoncloud/graphton.git
 ```
 
 #### "ImportError: cannot import name 'create_deep_agent'"
@@ -543,7 +543,7 @@ pip install --force-reinstall git+https://github.com/plantoncloud-inc/graphton.g
 ```bash
 # Reinstall
 pip uninstall graphton
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 
 # Clear Python cache
 find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -566,7 +566,7 @@ pip list | grep langchain
 pip install --upgrade langchain langchain-core langchain-anthropic langchain-openai
 
 # Or use constraints file
-pip install -c constraints.txt git+https://github.com/plantoncloud-inc/graphton.git
+pip install -c constraints.txt git+https://github.com/plantoncloud/graphton.git
 ```
 
 #### "No matching distribution found for deepagents"
@@ -580,15 +580,15 @@ pip install -c constraints.txt git+https://github.com/plantoncloud-inc/graphton.
 pip install deepagents>=0.2.4
 
 # Then install graphton
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 ### Getting Help
 
 If you encounter issues not covered here:
 
-1. **Check existing issues:** https://github.com/plantoncloud-inc/graphton/issues
-2. **Search discussions:** https://github.com/plantoncloud-inc/graphton/discussions
+1. **Check existing issues:** https://github.com/plantoncloud/graphton/issues
+2. **Search discussions:** https://github.com/plantoncloud/graphton/discussions
 3. **Open new issue:** Include:
    - Python version (`python --version`)
    - pip version (`pip --version`)

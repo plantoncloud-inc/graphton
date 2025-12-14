@@ -1,6 +1,6 @@
 # Graphton
 
-[![CI](https://github.com/plantoncloud-inc/graphton/actions/workflows/ci.yml/badge.svg)](https://github.com/plantoncloud-inc/graphton/actions/workflows/ci.yml)
+[![CI](https://github.com/plantoncloud/graphton/actions/workflows/ci.yml/badge.svg)](https://github.com/plantoncloud/graphton/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -213,6 +213,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deve
 
 ## Links
 
-- **Repository**: https://github.com/plantoncloud-inc/graphton
-- **Documentation**: https://github.com/plantoncloud-inc/graphton#readme
-- **Issues**: https://github.com/plantoncloud-inc/graphton/issues
+- **Repository**: https://github.com/plantoncloud/graphton
+- **Documentation**: https://github.com/plantoncloud/graphton#readme
+- **Issues**: https://github.com/plantoncloud/graphton/issues

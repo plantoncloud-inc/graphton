@@ -90,7 +90,7 @@ Before submitting, please check:
 - [ ] I have provided clear use cases
 - [ ] I have described why existing features don't solve this
 - [ ] I have considered backward compatibility
-- [ ] I have checked the [API Documentation](https://github.com/plantoncloud-inc/graphton/blob/main/docs/API.md)
+- [ ] I have checked the [API Documentation](https://github.com/plantoncloud/graphton/blob/main/docs/API.md)
 
 ## Offer to Contribute
 

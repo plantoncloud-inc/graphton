@@ -231,4 +231,4 @@ Tasks to complete after merging:
 
 **Thank you for contributing to Graphton!** 🚀
 
-For questions, see [CONTRIBUTING.md](https://github.com/plantoncloud-inc/graphton/blob/main/CONTRIBUTING.md) or ask in [Discussions](https://github.com/plantoncloud-inc/graphton/discussions).
+For questions, see [CONTRIBUTING.md](https://github.com/plantoncloud/graphton/blob/main/CONTRIBUTING.md) or ask in [Discussions](https://github.com/plantoncloud/graphton/discussions).

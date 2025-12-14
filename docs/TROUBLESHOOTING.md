@@ -54,7 +54,7 @@ ERROR: Could not find a version that satisfies the requirement graphton
 
 ```bash
 # Try with verbose output to see what's failing
-pip install -v git+https://github.com/plantoncloud-inc/graphton.git
+pip install -v git+https://github.com/plantoncloud/graphton.git
 
 # Check network connectivity
 ping github.com
@@ -62,7 +62,7 @@ ping github.com
 # Try in clean environment
 python -m venv clean_env
 source clean_env/bin/activate
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 
 # If still failing, check specific dependency versions
 pip install deepagents>=0.2.4  # Install manually first
@@ -81,12 +81,12 @@ ERROR: Could not install packages due to an OSError: [Errno 13] Permission denie
 
 ```bash
 # Option 1: Install for user only
-pip install --user git+https://github.com/plantoncloud-inc/graphton.git
+pip install --user git+https://github.com/plantoncloud/graphton.git
 
 # Option 2: Use virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 ```
 
 ### "Git not found" or "Git command failed"
@@ -139,7 +139,7 @@ which python
 python -c "import sys; print(sys.prefix)"
 
 # Reinstall if needed
-pip install --force-reinstall git+https://github.com/plantoncloud-inc/graphton.git
+pip install --force-reinstall git+https://github.com/plantoncloud/graphton.git
 ```
 
 ### "ANTHROPIC_API_KEY not found"
@@ -689,18 +689,18 @@ ModuleNotFoundError: No module named 'graphton'
 
 ```dockerfile
 # Add to Dockerfile
-RUN pip install git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+RUN pip install git+https://github.com/plantoncloud/graphton.git@v0.1.0
 ```
 
 ```yaml
 # Add to requirements.txt
-git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+git+https://github.com/plantoncloud/graphton.git@v0.1.0
 ```
 
 ```yaml
 # Add to pyproject.toml
 [tool.poetry.dependencies]
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", tag = "v0.1.0"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", tag = "v0.1.0"}
 ```
 
 ### "Environment variables not set in production"
@@ -843,7 +843,7 @@ agent = create_deep_agent(
 ### Before Opening an Issue
 
 1. **Check this troubleshooting guide**
-2. **Search existing issues:** https://github.com/plantoncloud-inc/graphton/issues
+2. **Search existing issues:** https://github.com/plantoncloud/graphton/issues
 3. **Review documentation:**
    - [Configuration Guide](CONFIGURATION.md)
    - [Installation Guide](INSTALLATION.md)
@@ -881,9 +881,9 @@ Include:
 
 ### Community Resources
 
-- **GitHub Issues:** https://github.com/plantoncloud-inc/graphton/issues
-- **Discussions:** https://github.com/plantoncloud-inc/graphton/discussions
-- **Examples:** https://github.com/plantoncloud-inc/graphton/tree/main/examples
+- **GitHub Issues:** https://github.com/plantoncloud/graphton/issues
+- **Discussions:** https://github.com/plantoncloud/graphton/discussions
+- **Examples:** https://github.com/plantoncloud/graphton/tree/main/examples
 
 ### Emergency Workarounds
 

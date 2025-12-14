@@ -651,10 +651,10 @@ agent = create_deep_agent(
 
 ```bash
 # Add Graphton
-pip install git+https://github.com/plantoncloud-inc/graphton.git
+pip install git+https://github.com/plantoncloud/graphton.git
 
 # Or with Poetry
-poetry add git+https://github.com/plantoncloud-inc/graphton.git
+poetry add git+https://github.com/plantoncloud/graphton.git
 ```
 
 ### Step 2: Update Imports
@@ -801,7 +801,7 @@ Zero performance impact. Graphton is a thin wrapper that:
 
 ### What if I find a bug?
 
-Open an issue: https://github.com/plantoncloud-inc/graphton/issues
+Open an issue: https://github.com/plantoncloud/graphton/issues
 
 Include:
 - Graphton version
@@ -819,6 +819,6 @@ After migration:
 
 ## Need Help?
 
-- **GitHub Issues:** https://github.com/plantoncloud-inc/graphton/issues
-- **Discussions:** https://github.com/plantoncloud-inc/graphton/discussions
-- **Examples:** https://github.com/plantoncloud-inc/graphton/tree/main/examples
+- **GitHub Issues:** https://github.com/plantoncloud/graphton/issues
+- **Discussions:** https://github.com/plantoncloud/graphton/discussions
+- **Examples:** https://github.com/plantoncloud/graphton/tree/main/examples

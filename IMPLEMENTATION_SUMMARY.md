@@ -112,7 +112,7 @@ This document summarizes the implementation of fixes for per-user MCP authentica
 ### 1. Update Graphton Library
 
 ```bash
-cd /Users/suresh/scm/github.com/plantoncloud-inc/graphton
+cd /Users/suresh/scm/github.com/plantoncloud/graphton
 # Changes are already in src/graphton/core/middleware.py
 # No rebuild needed if Python interpreted
 ```
@@ -196,6 +196,16 @@ For questions or issues:
 **Implementation Date**: November 28, 2025
 **Implemented By**: Claude (Cursor AI)
 **Based On**: Gemini Deep Research findings
+
+
+
+
+
+
+
+
+
+
 
 
 

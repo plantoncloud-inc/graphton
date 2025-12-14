@@ -273,7 +273,7 @@ poetry show --outdated
 
 ```bash
 # Update dependencies regularly
-pip install --upgrade git+https://github.com/plantoncloud-inc/graphton.git
+pip install --upgrade git+https://github.com/plantoncloud/graphton.git
 
 # Or with Poetry
 poetry update graphton
@@ -284,12 +284,12 @@ poetry update graphton
 ```toml
 # pyproject.toml
 [tool.poetry.dependencies]
-graphton = {git = "https://github.com/plantoncloud-inc/graphton.git", tag = "v0.1.0"}
+graphton = {git = "https://github.com/plantoncloud/graphton.git", tag = "v0.1.0"}
 ```
 
 ```
 # requirements.txt
-git+https://github.com/plantoncloud-inc/graphton.git@v0.1.0
+git+https://github.com/plantoncloud/graphton.git@v0.1.0
 ```
 
 ### Network Security
@@ -535,7 +535,7 @@ Before deploying to production:
 For security concerns or questions:
 
 - **Email:** security@planton.ai
-- **GitHub Security Advisories:** https://github.com/plantoncloud-inc/graphton/security/advisories
+- **GitHub Security Advisories:** https://github.com/plantoncloud/graphton/security/advisories
 
 ## Updates
 

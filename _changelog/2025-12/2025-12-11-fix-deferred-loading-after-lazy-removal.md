@@ -293,3 +293,13 @@ This fix restores async context support while preserving the Dec 11 improvement 
 
 The key insight: **When tools must be loaded before use (eager wrappers), and we're in an async context (deferred loading), we must force synchronous loading at graph construction time.**
 
+
+
+
+
+
+
+
+
+
+
